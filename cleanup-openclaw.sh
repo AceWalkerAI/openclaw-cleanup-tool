@@ -1,77 +1,80 @@
 #!/bin/bash
 # ============================================================
-# OpenClaw 配置清理腳本 (Configuration Cleanup Script)
+# OpenClaw Configuration Cleanup Script
+# OpenClaw 配置清理腳本
 # ============================================================
 # 
-# 用途：當遇到以下錯誤時使用
+# Use when you encounter these errors:
+# 適用於以下錯誤：
 #   - "Provider anthropic is in cooldown (all profiles unavailable)"
 #   - "No API key found for provider"
-#   - 認證配置混亂，想從頭設定
+#   - Auth configuration corrupted, want to start fresh
 #
-# 此腳本會清除所有 API Keys 和認證配置，讓你可以重新執行 openclaw configure
+# This script clears all API Keys and auth configs,
+# allowing you to reconfigure with `openclaw configure`
 #
-# 作者：Ace 🦊 (AceWalkerAI)
-# 授權：MIT
+# Author: Ace 🦊 (AceWalkerAI)
+# License: MIT
 # ============================================================
 
 set -e
 
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-echo "  🧹 OpenClaw 配置清理腳本"
+echo "  🧹 OpenClaw Configuration Cleanup"
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 echo ""
 
-# 配置路徑
+# Configuration paths
 OPENCLAW_DIR="$HOME/.openclaw"
 CONFIG_FILE="$OPENCLAW_DIR/openclaw.json"
 BACKUP_FILE="$CONFIG_FILE.backup.$(date +%Y%m%d-%H%M%S)"
 
-# 檢查 jq 是否安裝
+# Check if jq is installed
 if ! command -v jq &> /dev/null; then
-    echo "❌ 錯誤: 需要安裝 jq"
+    echo "❌ Error: jq is required"
     echo "   macOS: brew install jq"
     echo "   Ubuntu: sudo apt install jq"
     exit 1
 fi
 
-# 檢查 openclaw.json 是否存在
+# Check if openclaw.json exists
 if [ ! -f "$CONFIG_FILE" ]; then
-    echo "❌ 錯誤: 找不到 $CONFIG_FILE"
-    echo "   請確認 OpenClaw 已安裝"
+    echo "❌ Error: Cannot find $CONFIG_FILE"
+    echo "   Please make sure OpenClaw is installed"
     exit 1
 fi
 
-echo "📦 步驟 1: 建立備份..."
+echo "📦 Step 1: Creating backup..."
 cp "$CONFIG_FILE" "$BACKUP_FILE"
-echo "   ✅ 備份已建立: $BACKUP_FILE"
+echo "   ✅ Backup created: $BACKUP_FILE"
 echo ""
 
-echo "🛑 步驟 2: 停止 OpenClaw 服務..."
-openclaw gateway stop 2>&1 | head -1 || echo "   服務未運行"
+echo "🛑 Step 2: Stopping OpenClaw service..."
+openclaw gateway stop 2>&1 | head -1 || echo "   Service not running"
 sleep 2
 echo ""
 
-echo "🗑️  步驟 3: 刪除所有 auth-profiles.json..."
+echo "🗑️  Step 3: Deleting all auth-profiles.json..."
 AUTH_COUNT=$(find "$OPENCLAW_DIR/agents" -name "auth-profiles.json" -type f 2>/dev/null | wc -l | xargs)
 if [ "$AUTH_COUNT" -gt 0 ]; then
     find "$OPENCLAW_DIR/agents" -name "auth-profiles.json" -type f -delete
-    echo "   ✅ 已刪除 $AUTH_COUNT 個認證檔案"
+    echo "   ✅ Deleted $AUTH_COUNT auth file(s)"
 else
-    echo "   ℹ️  沒有找到 auth-profiles.json 檔案"
+    echo "   ℹ️  No auth-profiles.json files found"
 fi
 echo ""
 
-echo "🔧 步驟 4: 清理 openclaw.json 配置..."
+echo "🔧 Step 4: Cleaning openclaw.json configuration..."
 jq '
-  # 刪除所有環境變數（API Keys）
+  # Delete all environment variables (API Keys)
   del(.env) |
-  # 刪除所有認證配置
+  # Delete all auth profiles
   del(.auth.profiles) |
-  # 刪除 web search API key
+  # Delete web search API key
   del(.tools.web.search.apiKey) |
-  # 清空所有備援模型（fallbacks）
+  # Clear all fallback models
   .agents.defaults.model.fallbacks = [] |
-  # 清空各 agent 的備援
+  # Clear fallbacks for each agent
   .agents.list = [
     .agents.list[] |
     if .model then del(.model.fallbacks) else . end
@@ -80,35 +83,35 @@ jq '
 
 if [ $? -eq 0 ]; then
     mv "${CONFIG_FILE}.tmp" "$CONFIG_FILE"
-    echo "   ✅ 配置檔案已清理"
+    echo "   ✅ Configuration file cleaned"
 else
-    echo "   ❌ 清理失敗，配置檔案未修改"
+    echo "   ❌ Cleanup failed, configuration unchanged"
     rm -f "${CONFIG_FILE}.tmp"
     exit 1
 fi
 echo ""
 
-echo "📊 步驟 5: 驗證清理結果..."
-echo "   環境變數: $(jq -r 'if .env then "仍有殘留" else "✅ 已清除" end' "$CONFIG_FILE")"
-echo "   認證配置: $(jq -r 'if .auth.profiles then "仍有殘留" else "✅ 已清除" end' "$CONFIG_FILE")"
-echo "   備援模型: $(jq -r '.agents.defaults.model.fallbacks | length' "$CONFIG_FILE") 個"
-echo "   auth-profiles.json: $(find "$OPENCLAW_DIR/agents" -name "auth-profiles.json" 2>/dev/null | wc -l | xargs) 個"
+echo "📊 Step 5: Verifying cleanup results..."
+echo "   Environment vars: $(jq -r 'if .env then "still present" else "✅ cleared" end' "$CONFIG_FILE")"
+echo "   Auth profiles: $(jq -r 'if .auth.profiles then "still present" else "✅ cleared" end' "$CONFIG_FILE")"
+echo "   Fallback models: $(jq -r '.agents.defaults.model.fallbacks | length' "$CONFIG_FILE")"
+echo "   auth-profiles.json: $(find "$OPENCLAW_DIR/agents" -name "auth-profiles.json" 2>/dev/null | wc -l | xargs) file(s)"
 echo ""
 
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-echo "  ✅ 清理完成！"
+echo "  ✅ Cleanup Complete!"
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 echo ""
-echo "📋 已清除:"
-echo "   • 所有 API 金鑰 (Anthropic, OpenAI, Gemini, Brave...)"
-echo "   • 所有認證配置檔 (auth-profiles.json)"
-echo "   • 所有備援模型配置 (fallbacks)"
+echo "📋 Cleared:"
+echo "   • All API Keys (Anthropic, OpenAI, Gemini, Brave...)"
+echo "   • All auth configuration files (auth-profiles.json)"
+echo "   • All fallback model configurations"
 echo ""
-echo "💾 備份檔案:"
+echo "💾 Backup file:"
 echo "   $BACKUP_FILE"
 echo ""
-echo "🚀 下一步:"
-echo "   執行以下指令重新設定："
+echo "🚀 Next steps:"
+echo "   Run the following command to reconfigure:"
 echo ""
 echo "   openclaw configure"
 echo ""

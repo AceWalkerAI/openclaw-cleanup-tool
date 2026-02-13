@@ -1,10 +1,12 @@
-# 🧹 OpenClaw 配置清理工具
+# 🧹 OpenClaw Cleanup Tool
 
-當你的 OpenClaw 遇到認證錯誤無法恢復時，使用此工具清理配置並重新設定。
+When your OpenClaw encounters authentication errors that won't recover, use this tool to clean up the configuration and start fresh.
 
-## 🔥 適用情境
+[繁體中文版 README](./README_zh-TW.md)
 
-當你看到以下錯誤時：
+## 🔥 When to Use
+
+When you see errors like:
 
 ```
 ⚠️ Agent failed before reply: All models failed (4): 
@@ -13,28 +15,28 @@ anthropic/claude-sonnet-4-5: Provider anthropic is in cooldown (all profiles una
 ...
 ```
 
-或者：
+Or:
 
 ```
 No API key found for provider "anthropic"
 ```
 
-這通常是因為：
-- API Key 過期或失效
-- 認證配置檔案損壞
-- cooldown 機制被錯誤觸發
+This usually happens because:
+- API Key expired or invalid
+- Auth configuration files corrupted
+- Cooldown mechanism incorrectly triggered
 
-## 📥 安裝
+## 📥 Installation
 
 ```bash
-# 下載腳本
+# Download the script
 curl -O https://raw.githubusercontent.com/AceWalkerAI/openclaw-cleanup-tool/main/cleanup-openclaw.sh
 
-# 給予執行權限
+# Make it executable
 chmod +x cleanup-openclaw.sh
 ```
 
-或者直接 clone：
+Or clone the repo:
 
 ```bash
 git clone https://github.com/AceWalkerAI/openclaw-cleanup-tool.git
@@ -42,52 +44,52 @@ cd openclaw-cleanup-tool
 chmod +x cleanup-openclaw.sh
 ```
 
-## 🚀 使用方法
+## 🚀 Usage
 
-### 步驟 1：執行清理腳本
+### Step 1: Run the cleanup script
 
 ```bash
 ./cleanup-openclaw.sh
 ```
 
-腳本會：
-1. ✅ 備份你的 `openclaw.json`
-2. ✅ 停止 OpenClaw 服務
-3. ✅ 刪除所有 `auth-profiles.json`
-4. ✅ 清除配置中的 API Keys
-5. ✅ 清除所有 fallback models
+The script will:
+1. ✅ Backup your `openclaw.json`
+2. ✅ Stop OpenClaw service
+3. ✅ Delete all `auth-profiles.json` files
+4. ✅ Clear API Keys from config
+5. ✅ Clear all fallback models
 
-### 步驟 2：重新設定 OpenClaw
+### Step 2: Reconfigure OpenClaw
 
 ```bash
 openclaw configure
 ```
 
-按照提示輸入你的 API Key 和偏好設定。
+Follow the prompts to enter your API Key and preferences.
 
-### 步驟 3：啟動服務
+### Step 3: Start the service
 
 ```bash
 openclaw gateway start
 ```
 
-## ⚙️ 關於預設模型
+## ⚙️ About Default Models
 
-清理後執行 `openclaw configure` 時，會讓你選擇預設模型。
+After cleanup, running `openclaw configure` will let you choose a default model.
 
-### 常用模型選項
+### Common Model Options
 
-| Provider | Model | 說明 |
-|----------|-------|------|
-| Anthropic | `anthropic/claude-opus-4-5` | 最強，適合複雜任務 |
-| Anthropic | `anthropic/claude-sonnet-4-5` | 平衡，日常使用 |
-| Anthropic | `anthropic/claude-3-5-haiku-20241022` | 快速便宜，簡單任務 |
+| Provider | Model | Description |
+|----------|-------|-------------|
+| Anthropic | `anthropic/claude-opus-4-5` | Most capable, for complex tasks |
+| Anthropic | `anthropic/claude-sonnet-4-5` | Balanced, daily use |
+| Anthropic | `anthropic/claude-3-5-haiku-20241022` | Fast & cheap, simple tasks |
 | Google | `google-gemini-cli/gemini-3-pro-preview` | Gemini Pro |
 | OpenAI | `openai/gpt-4o` | GPT-4o |
 
-### 手動修改預設模型
+### Manually Change Default Model
 
-如果想手動修改，編輯 `~/.openclaw/openclaw.json`：
+To manually change, edit `~/.openclaw/openclaw.json`:
 
 ```json
 {
@@ -105,15 +107,15 @@ openclaw gateway start
 }
 ```
 
-修改後重啟：
+Then restart:
 
 ```bash
 openclaw gateway restart
 ```
 
-### 設定模型別名
+### Setting Model Aliases
 
-在配置中加入別名，方便切換：
+Add aliases in config for easy switching:
 
 ```json
 {
@@ -129,68 +131,68 @@ openclaw gateway restart
 }
 ```
 
-## 📂 清理的內容
+## 📂 What Gets Cleaned
 
-| 項目 | 位置 | 說明 |
-|------|------|------|
-| API Keys | `openclaw.json` → `env` | 所有環境變數 |
-| 認證配置 | `openclaw.json` → `auth.profiles` | OAuth/Token 設定 |
-| Brave API | `openclaw.json` → `tools.web.search.apiKey` | 網頁搜尋金鑰 |
-| 認證檔案 | `~/.openclaw/agents/*/agent/auth-profiles.json` | 各 agent 認證 |
-| Fallbacks | `openclaw.json` → `agents.defaults.model.fallbacks` | 備援模型列表 |
+| Item | Location | Description |
+|------|----------|-------------|
+| API Keys | `openclaw.json` → `env` | All environment variables |
+| Auth Config | `openclaw.json` → `auth.profiles` | OAuth/Token settings |
+| Brave API | `openclaw.json` → `tools.web.search.apiKey` | Web search key |
+| Auth Files | `~/.openclaw/agents/*/agent/auth-profiles.json` | Per-agent auth |
+| Fallbacks | `openclaw.json` → `agents.defaults.model.fallbacks` | Fallback model list |
 
-## 💾 備份與還原
+## 💾 Backup & Restore
 
-### 備份位置
+### Backup Location
 
-每次執行清理會自動建立備份：
+Each cleanup automatically creates a backup:
 
 ```
 ~/.openclaw/openclaw.json.backup.YYYYMMDD-HHMMSS
 ```
 
-### 還原備份
+### Restore from Backup
 
-如果清理後想還原：
+If you want to restore after cleanup:
 
 ```bash
-# 找到備份檔案
+# Find backup file
 ls ~/.openclaw/openclaw.json.backup.*
 
-# 還原
+# Restore
 cp ~/.openclaw/openclaw.json.backup.XXXXXXXX-XXXXXX ~/.openclaw/openclaw.json
 
-# 重啟
+# Restart
 openclaw gateway restart
 ```
 
 ## ❓ FAQ
 
-### Q: 清理後我的對話記錄會消失嗎？
+### Q: Will cleanup delete my conversation history?
 
-**不會。** 此工具只清理認證配置，不會影響：
-- 對話記錄 (`~/.openclaw/agents/*/sessions/`)
-- Memory 檔案 (`~/.openclaw/workspace/memory/`)
-- 工作區檔案 (`~/.openclaw/workspace/`)
+**No.** This tool only cleans auth configuration. It does NOT affect:
+- Conversation history (`~/.openclaw/agents/*/sessions/`)
+- Memory files (`~/.openclaw/workspace/memory/`)
+- Workspace files (`~/.openclaw/workspace/`)
 
-### Q: 需要重新設定 Telegram Bot 嗎？
+### Q: Do I need to reconfigure Telegram Bot?
 
-**不需要。** Bot Token 不會被清除（除非你手動刪除）。但建議在 `openclaw configure` 時確認 channel 設定。
+**No.** Bot tokens are not cleared (unless you manually delete them). But it's recommended to verify channel settings during `openclaw configure`.
 
-### Q: jq 是什麼？為什麼需要？
+### Q: What is jq? Why is it required?
 
-`jq` 是 JSON 處理工具，用來安全地修改配置檔案。
+`jq` is a JSON processing tool used to safely modify configuration files.
 
-安裝方式：
+Installation:
 - macOS: `brew install jq`
 - Ubuntu/Debian: `sudo apt install jq`
 - Windows: `choco install jq`
 
-## 🤝 貢獻
+## 🤝 Contributing
 
-歡迎提交 Issue 或 PR！
+Issues and PRs are welcome!
 
-## 📄 授權
+## 📄 License
 
 MIT License
 

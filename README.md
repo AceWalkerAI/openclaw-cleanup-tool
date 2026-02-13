@@ -4,6 +4,10 @@ When your OpenClaw encounters authentication errors that won't recover, use this
 
 [繁體中文版 README](./README_zh-TW.md)
 
+> ⚠️ **WARNING: Please backup your `~/.openclaw/` directory before running this script!**
+> 
+> The script automatically backs up `openclaw.json`, but a full manual backup is recommended.
+
 ## 🔥 When to Use
 
 When you see errors like:

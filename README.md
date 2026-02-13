@@ -8,6 +8,8 @@ When your OpenClaw encounters authentication errors that won't recover, use this
 > 
 > The script automatically backs up `openclaw.json`, but a full manual backup is recommended.
 
+**🔧 Prefer manual steps?** See [MANUAL_STEPS.md](./MANUAL_STEPS.md) for step-by-step instructions without running any scripts.
+
 ## 🔥 When to Use
 
 When you see errors like:
